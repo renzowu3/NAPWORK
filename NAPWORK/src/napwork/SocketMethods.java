@@ -12,7 +12,7 @@ import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 
-public class SocketMethod extends Device{
+public class SocketMethods extends Device{
 	private int serverPortNum;
 	private int clientPortNum;
 	private String clientHostname;
