@@ -60,14 +60,54 @@ public class SocketMethods extends Device{
 	public static final int CLOSE_FILEOUTPUTSTREAM = 22;
 	@Override
 	void open(int param) {
-		// TODO Auto-generated method stub
-		
+		if(param == OPEN_TCP_CLIENTSOCKET){
+			try {
+				soc = new Socket(clientHostname, clientPortNum);
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}else if(param == OPEN_TCP_SERVERSOCKET){
+			try {
+				sc = new ServerSocket(serverPortNum);
+				soc =  sc.accept();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}else if(param == OPEN_UDP_CLIENTSOCKET){
+			try {
+				udpSoc = new DatagramSocket();
+			} catch (SocketException e) {
+				e.printStackTrace();
+			}
+		}else if(param == OPEN_UDP_SERVERSOCKET){
+			try {
+				udpServerSoc = new DatagramSocket(udpPortNum);
+			} catch (SocketException e) {
+				e.printStackTrace();
+			}
+		}
 	}
 
 	@Override
 	void close(int param) {
-		// TODO Auto-generated method stub
-		
+		try{
+			if(param == CLOSE_SERVERSOCKET){
+				sc.close();
+			}else if(param == CLOSE_CLIENTSOCKET){
+				soc.close();
+			}else if(param == CLOSE_INPUTSTREAM){
+				is.close();
+			}else if(param == CLOSE_OUTPUTSTREAM){
+				is.close();
+			}else if(param == CLOSE_FILEINPUTSTREAM){
+				fis.close();
+			}else if(param == CLOSE_FILEOUTPUTSTREAM){
+				fos.flush();
+				fos.close();
+			}
+		} catch (Exception e){
+			e.printStackTrace();
+		}
 	}
 
 	@Override
