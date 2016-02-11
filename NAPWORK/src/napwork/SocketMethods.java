@@ -1,5 +1,7 @@
 package napwork;
 
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.FileInputStream;
@@ -29,6 +31,8 @@ public class SocketMethods extends Device{
 	private OutputStream os;
 	private FileInputStream fis;
 	private FileOutputStream fos;
+	private BufferedInputStream bis;
+	private BufferedOutputStream bos;
 	private DataInputStream dis;
 	private DataOutputStream dos;
 	private int udpPortNum;
@@ -37,7 +41,7 @@ public class SocketMethods extends Device{
 	private InetAddress receiverAddress;
 	private DatagramPacket receivePacket;
 	private DatagramPacket sendPacket;
-	
+
 	public static final int OPEN_TCP_CLIENTSOCKET = 1;
 	public static final int OPEN_TCP_SERVERSOCKET = 2;
 	public static final int OPEN_UDP_CLIENTSOCKET = 3;
@@ -60,6 +64,7 @@ public class SocketMethods extends Device{
 	public static final int CLOSE_OUTPUTSTREAM = 20;
 	public static final int CLOSE_FILEINPUTSTREAM = 21;
 	public static final int CLOSE_FILEOUTPUTSTREAM = 22;
+
 	@Override
 	void open(int param) {
 		if(param == OPEN_TCP_CLIENTSOCKET){
@@ -114,8 +119,16 @@ public class SocketMethods extends Device{
 
 	@Override
 	void write(int param) {
-		// TODO Auto-generated method stub
-		
+		if(param == WRITE_BYTES){
+			try {	
+				bos.write(bytearray);
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		} else if(param == WRITE_FILETRANSFER){
+			
+		}
+
 	}
 
 	@Override
@@ -126,8 +139,14 @@ public class SocketMethods extends Device{
 
 	@Override
 	void setConfig(int param, Object value) {
-		// TODO Auto-generated method stub
-		
+		switch(param){
+		case WRITE_BYTES: bytearray = (byte[])value;
+						  dos = new DataOutputStream(soc.getOutputStream());
+						  bos = new BufferedOutputStream(dos);
+						  break;
+		case WRITE_TRANSFERFILE: //insert code necessary for file transfer
+		}
+
 	}
 
 	@Override
