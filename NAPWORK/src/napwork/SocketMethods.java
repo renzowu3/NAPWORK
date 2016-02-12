@@ -17,16 +17,22 @@ import java.net.Socket;
 import java.net.SocketException;
 
 public class SocketMethods extends Device{
+
+	private String filepath;
 	private int serverPortNum;
 	private int clientPortNum;
 	private String clientHostname;
-	private ServerSocket sc;
-	private Socket soc;
-	private String filepath;
 	private int TCPbuffersize; // recommended default 4096
 	private int UDPbuffersize;
 	private int bytesRead;
 	private byte[] bytearray;
+	private byte[] filearray;
+	private int udpPortNum;
+	private int writeMode;
+
+
+	private ServerSocket sc;
+	private Socket soc;
 	private InputStream is;
 	private OutputStream os;
 	private FileInputStream fis;
@@ -35,10 +41,9 @@ public class SocketMethods extends Device{
 	private BufferedOutputStream bos;
 	private DataInputStream dis;
 	private DataOutputStream dos;
-	private int udpPortNum;
 	private DatagramSocket udpSoc;
 	private DatagramSocket udpServerSoc;
-	private InetAddress receiverAddress;
+	private InetAddress IPAddress;
 	private DatagramPacket receivePacket;
 	private DatagramPacket sendPacket;
 
@@ -48,15 +53,16 @@ public class SocketMethods extends Device{
 	public static final int OPEN_UDP_SERVERSOCKET = 4;
 	public static final int TCP_SERVERPORT = 5;
 	public static final int TCP_CLIENTPORT = 6;
+	public static final int TCP_CLIENTHOSTNAME = 23;
 	public static final int UDP_PORT = 7;
 	public static final int TCP_BUFFERSIZE = 8;
 	public static final int UDP_BUFFERSIZE = 9;
-	public static final int SET_FILEPATH = 10;
-	public static final int SET_ADDRESS = 11;
+	public static final int FILEPATH = 10;
+	public static final int ADDRESS = 11;
 	public static final int READ_FILESTREAM = 12;
 	public static final int READ_INPUTSTREAM = 13;
-	public static final int WRITE_FILESTREAM = 14;
-	public static final int WRITE_OUTPUTSTREAM = 15;
+	public static final int WRITE_FILETRANSFER = 14;
+	public static final int WRITE_BYTES = 15;
 	public static final int WRITE_DATAGRAMPACKET = 16;
 	public static final int CLOSE_SERVERSOCKET = 17;
 	public static final int CLOSE_CLIENTSOCKET = 18;
@@ -64,7 +70,10 @@ public class SocketMethods extends Device{
 	public static final int CLOSE_OUTPUTSTREAM = 20;
 	public static final int CLOSE_FILEINPUTSTREAM = 21;
 	public static final int CLOSE_FILEOUTPUTSTREAM = 22;
-
+	public static final int CLOSE_DATAINPUTSTREAM = 24;
+	public static final int CLOSE_DATAOUTPUTSTREAM = 25;
+	public static final int READY_TRANSFERFILE = 26;
+	public static final int READY_BYTES = 27;
 	@Override
 	void open(int param) {
 		if(param == OPEN_TCP_CLIENTSOCKET){
@@ -105,12 +114,16 @@ public class SocketMethods extends Device{
 			}else if(param == CLOSE_INPUTSTREAM){
 				is.close();
 			}else if(param == CLOSE_OUTPUTSTREAM){
-				is.close();
+				os.close();
 			}else if(param == CLOSE_FILEINPUTSTREAM){
 				fis.close();
 			}else if(param == CLOSE_FILEOUTPUTSTREAM){
 				fos.flush();
 				fos.close();
+			}else if(param == CLOSE_DATAOUTPUTSTREAM){
+				dos.close();
+			}else if(param == CLOSE_DATAINPUTSTREAM){
+				dis.close();
 			}
 		} catch (Exception e){
 			e.printStackTrace();
@@ -119,14 +132,20 @@ public class SocketMethods extends Device{
 
 	@Override
 	void write(int param) {
-		if(param == WRITE_BYTES){
+		if(param == WRITE_BYTES && writeMode == 0){
 			try {	
 				bos.write(bytearray);
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
-		} else if(param == WRITE_FILETRANSFER){
-			
+		} else if(param == WRITE_FILETRANSFER && writeMode == 1){
+			try {
+				while (fis.read(filearray) > 0) {
+					dos.write(filearray);
+				}
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
 		}
 
 	}
@@ -140,18 +159,49 @@ public class SocketMethods extends Device{
 	@Override
 	void setConfig(int param, Object value) {
 		switch(param){
-		case WRITE_BYTES: bytearray = (byte[])value;
-						  dos = new DataOutputStream(soc.getOutputStream());
-						  bos = new BufferedOutputStream(dos);
-						  break;
-		case WRITE_TRANSFERFILE: //insert code necessary for file transfer
+		case READY_BYTES: try {
+			dos = new DataOutputStream(soc.getOutputStream());
+			bos = new BufferedOutputStream(dos);
+			writeMode = 0;
+		} catch (IOException e) {
+			e.printStackTrace();
+		} break;
+
+		case READY_TRANSFERFILE: try {
+			dos = new DataOutputStream(soc.getOutputStream());
+			fis = new FileInputStream(filepath);
+			writeMode = 1;
+		} catch (IOException e) {
+			e.printStackTrace();
+		} break;
+		case TCP_CLIENTPORT: clientPortNum = (int)value; break;
+		case TCP_SERVERPORT: serverPortNum = (int)value; break;
+		case UDP_PORT: udpPortNum = (int)value; break;
+		case TCP_BUFFERSIZE: TCPbuffersize = (int)value; break;
+		case UDP_BUFFERSIZE: UDPbuffersize = (int)value; break;
+		case SET_FILEPATH: filepath = (String)value; break;
+		case TCP_CLIENTHOSTNAME: clientHostname = (String)value; break;
 		}
 
 	}
-
+	/*public static final int TCP_SERVERPORT = 5;
+	public static final int TCP_CLIENTPORT = 6;
+	public static final int UDP_PORT = 7;
+	public static final int TCP_BUFFERSIZE = 8;
+	public static final int UDP_BUFFERSIZE = 9;
+	public static final int FILEPATH = 10;
+	public static final int ADDRESS = 11;*/
 	@Override
 	Object getConfig(int param) {
-		// TODO Auto-generated method stub
+		switch(param){
+		case TCP_SERVERPORT: return serverPortNum;
+		case TCP_CLIENTPORT: return clientPortNum;
+		case TCP_CLIENTHOSTNAME: return clientHostname;
+		case TCP_BUFFERSIZE: return TCPbuffersize;
+		case UDP_BUFFERSIZE: return UDPbuffersize;
+		case ADDRESS: return IPAddress;
+		case FILEPATH: return filepath;
+		}
 		return null;
 	}
 
