@@ -59,8 +59,8 @@ public class SocketMethods extends Device{
 	public static final int UDP_BUFFERSIZE = 9;
 	public static final int FILEPATH = 10;
 	public static final int ADDRESS = 11;
-	public static final int READ_FILESTREAM = 12;
-	public static final int READ_INPUTSTREAM = 13;
+	public static final int READ_FILETRANSFER = 12;
+	public static final int READ_BYTES = 13;
 	public static final int WRITE_FILETRANSFER = 14;
 	public static final int WRITE_BYTES = 15;
 	public static final int WRITE_DATAGRAMPACKET = 16;
@@ -74,6 +74,9 @@ public class SocketMethods extends Device{
 	public static final int CLOSE_DATAOUTPUTSTREAM = 25;
 	public static final int READY_TRANSFERFILE = 26;
 	public static final int READY_BYTES = 27;
+	public static final int BYTEARRAY = 28;
+	public static final int FILEARRAY = 29;
+
 	@Override
 	void open(int param) {
 		if(param == OPEN_TCP_CLIENTSOCKET){
@@ -140,6 +143,7 @@ public class SocketMethods extends Device{
 			}
 		} else if(param == WRITE_FILETRANSFER && writeMode == 1){
 			try {
+				//should it be inside a while loop or should we let the user handle it?
 				while (fis.read(filearray) > 0) {
 					dos.write(filearray);
 				}
@@ -152,7 +156,22 @@ public class SocketMethods extends Device{
 
 	@Override
 	Object read(int param) {
-		// TODO Auto-generated method stub
+		if(param == READ_BYTES){
+			try {	
+				bis.read(bytearray);
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		} else if(param == READ_FILETRANSFER){
+			int read;
+			try {
+				while((read = dis.read(filearray)) != -1){
+					bos.write(filearray);
+				}
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
 		return null;
 	}
 
@@ -179,8 +198,10 @@ public class SocketMethods extends Device{
 		case UDP_PORT: udpPortNum = (int)value; break;
 		case TCP_BUFFERSIZE: TCPbuffersize = (int)value; break;
 		case UDP_BUFFERSIZE: UDPbuffersize = (int)value; break;
-		case SET_FILEPATH: filepath = (String)value; break;
+		case FILEPATH: filepath = (String)value; break;
 		case TCP_CLIENTHOSTNAME: clientHostname = (String)value; break;
+		case BYTEARRAY: bytearray = (byte[])value; break;
+		case FILEARRAY: filearray = (byte[])value; break;
 		}
 
 	}
@@ -201,6 +222,8 @@ public class SocketMethods extends Device{
 		case UDP_BUFFERSIZE: return UDPbuffersize;
 		case ADDRESS: return IPAddress;
 		case FILEPATH: return filepath;
+		case BYTEARRAY: return bytearray;
+		case FILEARRAY: return filearray;
 		}
 		return null;
 	}
