@@ -29,7 +29,7 @@ public class SocketMethods extends Device{
 	private byte[] filearray;
 	private int udpPortNum;
 	private int writeMode;
-
+		private byte[] udparray;
 
 	private ServerSocket sc;
 	private Socket soc;
@@ -47,10 +47,10 @@ public class SocketMethods extends Device{
 	private DatagramPacket receivePacket;
 	private DatagramPacket sendPacket;
 
+
 	public static final int OPEN_TCP_CLIENTSOCKET = 1;
 	public static final int OPEN_TCP_SERVERSOCKET = 2;
-	public static final int OPEN_UDP_CLIENTSOCKET = 3;
-	public static final int OPEN_UDP_SERVERSOCKET = 4;
+	public static final int OPEN_UDP_SOCKET = 3;
 	public static final int TCP_SERVERPORT = 5;
 	public static final int TCP_CLIENTPORT = 6;
 	public static final int TCP_CLIENTHOSTNAME = 23;
@@ -61,9 +61,10 @@ public class SocketMethods extends Device{
 	public static final int ADDRESS = 11;
 	public static final int READ_FILETRANSFER = 12;
 	public static final int READ_BYTES = 13;
+	public static final int READ_DATAGRAM = 30;
 	public static final int WRITE_FILETRANSFER = 14;
 	public static final int WRITE_BYTES = 15;
-	public static final int WRITE_DATAGRAMPACKET = 16;
+	public static final int WRITE_DATAGRAM = 16;
 	public static final int CLOSE_SERVERSOCKET = 17;
 	public static final int CLOSE_CLIENTSOCKET = 18;
 	public static final int CLOSE_INPUTSTREAM = 19;
@@ -92,19 +93,12 @@ public class SocketMethods extends Device{
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
-		}else if(param == OPEN_UDP_CLIENTSOCKET){
+		}else if(param == OPEN_UDP_SOCKET){
 			try {
 				udpSoc = new DatagramSocket();
 			} catch (SocketException e) {
 				e.printStackTrace();
 			}
-		}else if(param == OPEN_UDP_SERVERSOCKET){
-			try {
-				udpServerSoc = new DatagramSocket(udpPortNum);
-			} catch (SocketException e) {
-				e.printStackTrace();
-			}
-		}
 	}
 
 	@Override
@@ -150,8 +144,10 @@ public class SocketMethods extends Device{
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
+		} else if(param == WRITE_DATAGRAM){
+			sendPacket = new DatagramPacket(udparray, UDPbuffersize, receiverAddress, udpPortNum);
+			udpSoc.send(sendPacket);
 		}
-
 	}
 
 	@Override
@@ -171,7 +167,10 @@ public class SocketMethods extends Device{
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
-		}
+		} else if(param == READ_DATAGRAM){
+				receivePacket = new DatagramPacket(udparray, UDPbuffersize);
+				udpSoc.receive(receivePacket);
+			}
 		return null;
 	}
 
