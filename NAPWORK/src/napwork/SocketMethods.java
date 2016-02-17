@@ -16,7 +16,7 @@ import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketException;
-//somewat
+
 public class SocketMethods extends Device{
 
 	private String filepath;
