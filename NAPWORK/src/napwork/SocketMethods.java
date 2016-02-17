@@ -5,6 +5,7 @@ import java.io.BufferedOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -24,12 +25,13 @@ public class SocketMethods extends Device{
 	private String clientHostname;
 	private int TCPbuffersize; // recommended default 4096
 	private int UDPbuffersize;
-	private int bytesRead;
 	private byte[] bytearray;
 	private byte[] filearray;
 	private int udpPortNum;
 	private int writeMode;
-		private byte[] udparray;
+	private int readMode;
+	private InetAddress receiverAddress;
+	private byte[] udparray;
 
 	private ServerSocket sc;
 	private Socket soc;
@@ -47,36 +49,38 @@ public class SocketMethods extends Device{
 	private DatagramPacket receivePacket;
 	private DatagramPacket sendPacket;
 
-
 	public static final int OPEN_TCP_CLIENTSOCKET = 1;
 	public static final int OPEN_TCP_SERVERSOCKET = 2;
-	public static final int OPEN_UDP_SOCKET = 3;
+	public static final int OPEN_UDP_CLIENTSOCKET = 3;
+	public static final int OPEN_UDP_SERVERSOCKET = 4;
 	public static final int TCP_SERVERPORT = 5;
 	public static final int TCP_CLIENTPORT = 6;
-	public static final int TCP_CLIENTHOSTNAME = 23;
-	public static final int UDP_PORT = 7;
-	public static final int TCP_BUFFERSIZE = 8;
-	public static final int UDP_BUFFERSIZE = 9;
-	public static final int FILEPATH = 10;
-	public static final int ADDRESS = 11;
-	public static final int READ_FILETRANSFER = 12;
-	public static final int READ_BYTES = 13;
-	public static final int READ_DATAGRAM = 30;
-	public static final int WRITE_FILETRANSFER = 14;
-	public static final int WRITE_BYTES = 15;
-	public static final int WRITE_DATAGRAM = 16;
-	public static final int CLOSE_SERVERSOCKET = 17;
-	public static final int CLOSE_CLIENTSOCKET = 18;
-	public static final int CLOSE_INPUTSTREAM = 19;
-	public static final int CLOSE_OUTPUTSTREAM = 20;
-	public static final int CLOSE_FILEINPUTSTREAM = 21;
-	public static final int CLOSE_FILEOUTPUTSTREAM = 22;
-	public static final int CLOSE_DATAINPUTSTREAM = 24;
-	public static final int CLOSE_DATAOUTPUTSTREAM = 25;
-	public static final int READY_TRANSFERFILE = 26;
-	public static final int READY_BYTES = 27;
-	public static final int BYTEARRAY = 28;
-	public static final int FILEARRAY = 29;
+	public static final int TCP_CLIENTHOSTNAME = 7;
+	public static final int UDP_PORT = 8;
+	public static final int TCP_BUFFERSIZE = 9;
+	public static final int UDP_BUFFERSIZE = 10;
+	public static final int FILEPATH = 11;
+	public static final int ADDRESS = 12;
+	public static final int READ_FILETRANSFER = 13;
+	public static final int READ_BYTES = 14;
+	public static final int READ_DATAGRAM = 15;
+	public static final int WRITE_FILETRANSFER = 16;
+	public static final int WRITE_BYTES = 17;
+	public static final int WRITE_DATAGRAM = 18;
+	public static final int CLOSE_SERVERSOCKET = 19;
+	public static final int CLOSE_CLIENTSOCKET = 20;
+	public static final int CLOSE_INPUTSTREAM = 21;
+	public static final int CLOSE_OUTPUTSTREAM = 22;
+	public static final int CLOSE_FILEINPUTSTREAM = 23;
+	public static final int CLOSE_FILEOUTPUTSTREAM = 24;
+	public static final int CLOSE_DATAINPUTSTREAM = 25;
+	public static final int CLOSE_DATAOUTPUTSTREAM = 26;
+	public static final int READY_WRITE_TRANSFERFILE = 27;
+	public static final int READY_WRITE_BYTES = 28;
+	public static final int READY_READ_TRANSFERFILE = 29;
+	public static final int READY_READ_BYTES = 30;
+	public static final int BYTEARRAY = 31;
+	public static final int FILEARRAY = 32;
 
 	@Override
 	void open(int param) {
@@ -93,12 +97,19 @@ public class SocketMethods extends Device{
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
-		}else if(param == OPEN_UDP_SOCKET){
+		}else if(param == OPEN_UDP_CLIENTSOCKET){
 			try {
 				udpSoc = new DatagramSocket();
 			} catch (SocketException e) {
 				e.printStackTrace();
 			}
+		}else if(param == OPEN_UDP_SERVERSOCKET){
+			try {
+				udpServerSoc = new DatagramSocket(udpPortNum);
+			} catch (SocketException e) {
+				e.printStackTrace();
+			}
+		}
 	}
 
 	@Override
@@ -137,7 +148,6 @@ public class SocketMethods extends Device{
 			}
 		} else if(param == WRITE_FILETRANSFER && writeMode == 1){
 			try {
-				//should it be inside a while loop or should we let the user handle it?
 				while (fis.read(filearray) > 0) {
 					dos.write(filearray);
 				}
@@ -145,50 +155,74 @@ public class SocketMethods extends Device{
 				e.printStackTrace();
 			}
 		} else if(param == WRITE_DATAGRAM){
-			sendPacket = new DatagramPacket(udparray, UDPbuffersize, receiverAddress, udpPortNum);
-			udpSoc.send(sendPacket);
+			
+			try {
+				sendPacket = new DatagramPacket(udparray, UDPbuffersize, receiverAddress, udpPortNum);
+				udpSoc.send(sendPacket);
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
 		}
+
 	}
 
 	@Override
 	Object read(int param) {
-		if(param == READ_BYTES){
+		if(param == READ_BYTES && readMode == 0){
 			try {	
 				bis.read(bytearray);
+				return bytearray;
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
-		} else if(param == READ_FILETRANSFER){
-			int read;
+		} else if(param == READ_FILETRANSFER && readMode == 1){
 			try {
-				while((read = dis.read(filearray)) != -1){
+				while(dis.read(filearray) != -1){
 					bos.write(filearray);
 				}
+				return filepath;
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
 		} else if(param == READ_DATAGRAM){
+			try {
 				receivePacket = new DatagramPacket(udparray, UDPbuffersize);
 				udpSoc.receive(receivePacket);
+			} catch (IOException e) {
+				e.printStackTrace();
 			}
+		}
 		return null;
 	}
 
 	@Override
 	void setConfig(int param, Object value) {
 		switch(param){
-		case READY_BYTES: try {
+		case READY_WRITE_BYTES: try {
 			dos = new DataOutputStream(soc.getOutputStream());
 			bos = new BufferedOutputStream(dos);
 			writeMode = 0;
 		} catch (IOException e) {
 			e.printStackTrace();
 		} break;
-
-		case READY_TRANSFERFILE: try {
+		case READY_WRITE_TRANSFERFILE: try {
 			dos = new DataOutputStream(soc.getOutputStream());
 			fis = new FileInputStream(filepath);
 			writeMode = 1;
+		} catch (IOException e) {
+			e.printStackTrace();
+		} break;
+		case READY_READ_BYTES: try {
+			dis = new DataInputStream(soc.getInputStream());
+			bis = new BufferedInputStream(dis);
+			readMode = 0;
+		} catch (IOException e) {
+			e.printStackTrace();
+		} break;
+		case READY_READ_TRANSFERFILE: try {
+			dis = new DataInputStream(soc.getInputStream());
+			fos = new FileOutputStream(filepath);
+			readMode = 1;
 		} catch (IOException e) {
 			e.printStackTrace();
 		} break;
@@ -204,13 +238,7 @@ public class SocketMethods extends Device{
 		}
 
 	}
-	/*public static final int TCP_SERVERPORT = 5;
-	public static final int TCP_CLIENTPORT = 6;
-	public static final int UDP_PORT = 7;
-	public static final int TCP_BUFFERSIZE = 8;
-	public static final int UDP_BUFFERSIZE = 9;
-	public static final int FILEPATH = 10;
-	public static final int ADDRESS = 11;*/
+
 	@Override
 	Object getConfig(int param) {
 		switch(param){
