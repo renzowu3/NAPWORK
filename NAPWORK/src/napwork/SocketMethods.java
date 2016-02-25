@@ -32,7 +32,8 @@ public class SocketMethods extends Device{
 	private int readMode;
 	private InetAddress receiverAddress;
 	private byte[] udparray;
-
+	private int read;
+	
 	private ServerSocket sc;
 	private Socket soc;
 	private InputStream is;
@@ -81,6 +82,8 @@ public class SocketMethods extends Device{
 	public static final int READY_READ_BYTES = 30;
 	public static final int BYTEARRAY = 31;
 	public static final int FILEARRAY = 32;
+	public static final int CLOSE_BUFFEREDINPUTSTREAM = 33;
+	public static final int CLOSE_BUFFEREDOUTPUTSTREAM = 34;
 
 	@Override
 	void open(int param) {
@@ -93,6 +96,7 @@ public class SocketMethods extends Device{
 		}else if(param == OPEN_TCP_SERVERSOCKET){
 			try {
 				sc = new ServerSocket(serverPortNum);
+				System.out.println("DITO");
 				soc =  sc.accept();
 			} catch (IOException e) {
 				e.printStackTrace();
@@ -132,6 +136,10 @@ public class SocketMethods extends Device{
 				dos.close();
 			}else if(param == CLOSE_DATAINPUTSTREAM){
 				dis.close();
+			}else if(param == CLOSE_BUFFEREDINPUTSTREAM){
+				bis.close();
+			}else if(param == CLOSE_BUFFEREDOUTPUTSTREAM){
+				bos.close();
 			}
 		} catch (Exception e){
 			e.printStackTrace();
@@ -148,8 +156,8 @@ public class SocketMethods extends Device{
 			}
 		} else if(param == WRITE_FILETRANSFER && writeMode == 1){
 			try {
-				while (fis.read(filearray) > 0) {
-					dos.write(filearray);
+				while ((read = fis.read(filearray, 0, filearray.length)) != 1) {
+					dos.write(filearray, 0, read);
 				}
 				System.out.print("File sent!");
 			} catch (IOException e) {
@@ -178,8 +186,8 @@ public class SocketMethods extends Device{
 			}
 		} else if(param == READ_FILETRANSFER && readMode == 1){
 			try {
-				while(dis.read(filearray) != -1){
-					bos.write(filearray);
+				while((read = bis.read(filearray, 0, filearray.length)) != -1){
+					bos.write(filearray, 0, read);
 				}
 				return filepath;
 			} catch (IOException e) {
@@ -208,6 +216,7 @@ public class SocketMethods extends Device{
 		} break;
 		case READY_WRITE_TRANSFERFILE: try {
 			dos = new DataOutputStream(soc.getOutputStream());
+			bos = new BufferedOutputStream(dos);
 			fis = new FileInputStream(filepath);
 			writeMode = 1;
 		} catch (IOException e) {
@@ -222,6 +231,7 @@ public class SocketMethods extends Device{
 		} break;
 		case READY_READ_TRANSFERFILE: try {
 			dis = new DataInputStream(soc.getInputStream());
+			bis = new BufferedInputStream(dis);
 			fos = new FileOutputStream(filepath);
 			readMode = 1;
 		} catch (IOException e) {
