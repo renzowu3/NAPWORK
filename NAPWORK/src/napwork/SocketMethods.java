@@ -151,6 +151,7 @@ public class SocketMethods extends Device{
 				while (fis.read(filearray) > 0) {
 					dos.write(filearray);
 				}
+				System.out.print("File sent!");
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
@@ -229,7 +230,9 @@ public class SocketMethods extends Device{
 		case TCP_CLIENTPORT: clientPortNum = (int)value; break;
 		case TCP_SERVERPORT: serverPortNum = (int)value; break;
 		case UDP_PORT: udpPortNum = (int)value; break;
-		case TCP_BUFFERSIZE: TCPbuffersize = (int)value; break;
+		case TCP_BUFFERSIZE: TCPbuffersize = (int)value; 
+							 filearray = new byte[TCPbuffersize];
+						     break;
 		case UDP_BUFFERSIZE: UDPbuffersize = (int)value; break;
 		case FILEPATH: filepath = (String)value; break;
 		case TCP_CLIENTHOSTNAME: clientHostname = (String)value; break;

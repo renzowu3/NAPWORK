@@ -154,6 +154,7 @@ public class NICMethods extends Device{
 		} else if(param == OPEN_SENDERDEVICE){
 			try {
 				sender=JpcapSender.openDevice(devices[capDeviceIndex]);
+				System.out.println(devices[capDeviceIndex]);
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
@@ -180,32 +181,56 @@ public class NICMethods extends Device{
 
 	void write(int param){
 		if(param == WRITE_TCPPACKET){
-			TCPPacket packet = new TCPPacket(tcpsourcePort, tcpdestinationPort, tcp_seq, tcp_ack_num, tcp_urg, tcp_ack, tcp_psh, tcp_rst, tcp_syn, tcp_fin, tcp_rsv1, tcp_rsv2, tcp_window, tcp_urgent);
+			tcp_packet = new TCPPacket(tcpsourcePort, tcpdestinationPort, tcp_seq, tcp_ack_num, tcp_urg, tcp_ack, tcp_psh, tcp_rst, tcp_syn, tcp_fin, tcp_rsv1, tcp_rsv2, tcp_window, tcp_urgent);
+			e_packet = new EthernetPacket();
 			try {
-				packet.setIPv4Parameter(ipv4_priority, d_flag, t_flag, r_flag, rsv_tos, rsv_frag, dont_frag, more_frag, offset, ident, ttl, protocol, InetAddress.getByName(src), InetAddress.getByName(dst));
+				tcp_packet.setIPv4Parameter(ipv4_priority, d_flag, t_flag, r_flag, rsv_tos, rsv_frag, dont_frag, more_frag, offset, ident, ttl, protocol, InetAddress.getByName(src), InetAddress.getByName(dst));
+				tcp_packet.data = ("data").getBytes();
+				e_packet.frametype = EthernetPacket.ETHERTYPE_IP;
+				e_packet.src_mac = srcMac;
+				e_packet.dst_mac = dstMac;
+				tcp_packet.datalink = e_packet;
+				sender.sendPacket(tcp_packet);
+				
+				System.out.println(tcp_packet);
 			} catch (UnknownHostException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
+			System.out.println("test");
 		}
 		else if(param == WRITE_UDPPACKET){
-			UDPPacket packet = new UDPPacket(udpsourcePort, udpdestinationPort);
+			udp_packet = new UDPPacket(udpsourcePort, udpdestinationPort);
+			e_packet = new EthernetPacket();
 			try {
-				packet.setIPv4Parameter(ipv4_priority, d_flag, t_flag, r_flag, rsv_tos, rsv_frag, dont_frag, more_frag, offset, ident, ttl, protocol, InetAddress.getByName(src), InetAddress.getByName(dst));
+				udp_packet.setIPv4Parameter(ipv4_priority, d_flag, t_flag, r_flag, rsv_tos, rsv_frag, dont_frag, more_frag, offset, ident, ttl, protocol, InetAddress.getByName(src), InetAddress.getByName(dst));
+				udp_packet.data = ("data").getBytes();
+				e_packet.frametype = EthernetPacket.ETHERTYPE_IP;
+				e_packet.src_mac = srcMac;
+				e_packet.dst_mac = dstMac;
+				udp_packet.datalink = e_packet;
+				sender.sendPacket(udp_packet);
 			} catch (UnknownHostException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 		} else if(param == WRITE_ICMPPACKET){
-			ICMPPacket packet = new ICMPPacket();
-			packet.type = ICMPPacket.ICMP_ECHO;
-			packet.seq = (short) icmp_seq;
-			packet.id = (short) icmpID;
-			packet.orig_timestamp = icmp_origtimestamp;
-			packet.trans_timestamp = icmp_transtimestamp;
-			packet.recv_timestamp = icmp_recvtimestamp;
+			icmp_packet = new ICMPPacket();
+			icmp_packet.type = ICMPPacket.ICMP_ECHO;
+			icmp_packet.seq = (short) icmp_seq;
+			icmp_packet.id = (short) icmpID;
+			icmp_packet.orig_timestamp = icmp_origtimestamp;
+			icmp_packet.trans_timestamp = icmp_transtimestamp;
+			icmp_packet.recv_timestamp = icmp_recvtimestamp;
+			e_packet = new EthernetPacket();
 			try {
-				packet.setIPv4Parameter(ipv4_priority, d_flag, t_flag, r_flag, rsv_tos, rsv_frag, dont_frag, more_frag, offset, ident, ttl, protocol, InetAddress.getByName(src), InetAddress.getByName(dst));
+				icmp_packet.setIPv4Parameter(ipv4_priority, d_flag, t_flag, r_flag, rsv_tos, rsv_frag, dont_frag, more_frag, offset, ident, ttl, protocol, InetAddress.getByName(src), InetAddress.getByName(dst));
+				icmp_packet.data = ("data").getBytes();
+				e_packet.frametype = EthernetPacket.ETHERTYPE_IP;
+				e_packet.src_mac = srcMac;
+				e_packet.dst_mac = dstMac;
+				icmp_packet.datalink = e_packet;
+				sender.sendPacket(icmp_packet);
 			} catch (UnknownHostException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
@@ -250,6 +275,7 @@ public class NICMethods extends Device{
 		case TCP_RSV2: tcp_rsv2 = (boolean)value; break;
 		case D_FLAG: d_flag = (boolean)value; break;
 		case T_FLAG: t_flag = (boolean)value; break;
+		case R_FLAG: r_flag = (boolean)value; break;
 		case RSV_FRAG: rsv_frag = (boolean)value; break;
 		case DONT_FRAG: dont_frag = (boolean)value; break;
 		case MORE_FRAG: more_frag = (boolean)value; break;
@@ -262,7 +288,7 @@ public class NICMethods extends Device{
 		}
 	}
 
-	void setConfig(int param, boolean value){
+	/*void setConfig(int param, boolean value){
 		switch(param){
 		case CAPTOR_PROMISCMODE: capPromisc = value; break;
 		case TCP_ACK: tcp_ack = value; break;
@@ -279,7 +305,7 @@ public class NICMethods extends Device{
 		case MORE_FRAG: more_frag = value; break;
 		}
 		//insert conditional statements here and passing of values to corresponding variable
-	}
+	}*/
 
 
 	Object getConfig(int param){
