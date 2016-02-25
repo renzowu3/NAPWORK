@@ -103,6 +103,7 @@ public class SpeakerMethods extends Device{
 			}
 		} else if(param == OPEN_PLAYER){
 			sourceLine.start();
+			System.out.println("Sourceline start");
 		}
 
 	}
@@ -141,9 +142,7 @@ public class SpeakerMethods extends Device{
 	@Override
 	void write(int param){
 		if(param == WRITE_SOURCELINE_BYTES){
-			while(true){
 				sourceLine.write(sourceBytes, 0,  byteSize);
-			}
 		}
 		else if(param == WRITE_CLIP_AUDIOFILE){
 			audioClipFile.start();
@@ -194,7 +193,7 @@ public class SpeakerMethods extends Device{
 		case AUDIO_SAMPLERATE: formatSampleRate = (float)value; break;
 		case AUDIO_SAMPLESIZEINBITS: formatSampleSizeInBits = (int)value; break;
 		case AUDIO_WRITEBYTESIZE: byteSize = (int)value; break;
-		case AUDIO_SOURCEBYTES: sourceBytes = (byte[])value; break;
+		case AUDIO_SOURCEBYTES: sourceBytes = new byte[(int)value]; break;
 		} 
 	}
 

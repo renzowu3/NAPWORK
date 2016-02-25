@@ -33,6 +33,7 @@ public class SocketMethods extends Device{
 	private InetAddress receiverAddress;
 	private byte[] udparray;
 	private int read;
+	private int size;
 	
 	private ServerSocket sc;
 	private Socket soc;
@@ -84,19 +85,20 @@ public class SocketMethods extends Device{
 	public static final int FILEARRAY = 32;
 	public static final int CLOSE_BUFFEREDINPUTSTREAM = 33;
 	public static final int CLOSE_BUFFEREDOUTPUTSTREAM = 34;
+	public static final int SIZE = 35;
 
 	@Override
 	void open(int param) {
 		if(param == OPEN_TCP_CLIENTSOCKET){
 			try {
 				soc = new Socket(clientHostname, clientPortNum);
+				System.out.println("Connected to server!");
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
 		}else if(param == OPEN_TCP_SERVERSOCKET){
 			try {
 				sc = new ServerSocket(serverPortNum);
-				System.out.println("DITO");
 				soc =  sc.accept();
 			} catch (IOException e) {
 				e.printStackTrace();
@@ -156,10 +158,11 @@ public class SocketMethods extends Device{
 			}
 		} else if(param == WRITE_FILETRANSFER && writeMode == 1){
 			try {
-				while ((read = fis.read(filearray, 0, filearray.length)) != 1) {
+				System.out.println("WRITEsss");
+				while ((read = bis.read(filearray, 0, filearray.length)) != -1) {
 					dos.write(filearray, 0, read);
+					System.out.println("read:" + read);
 				}
-				System.out.print("File sent!");
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
@@ -179,7 +182,8 @@ public class SocketMethods extends Device{
 	Object read(int param) {
 		if(param == READ_BYTES && readMode == 0){
 			try {	
-				bis.read(bytearray);
+				dis.read(bytearray);
+				System.out.println("read bytes");
 				return bytearray;
 			} catch (IOException e) {
 				e.printStackTrace();
@@ -189,6 +193,7 @@ public class SocketMethods extends Device{
 				while((read = bis.read(filearray, 0, filearray.length)) != -1){
 					bos.write(filearray, 0, read);
 				}
+				System.out.println("Saved file to:" +filepath);
 				return filepath;
 			} catch (IOException e) {
 				e.printStackTrace();
@@ -218,13 +223,16 @@ public class SocketMethods extends Device{
 			dos = new DataOutputStream(soc.getOutputStream());
 			bos = new BufferedOutputStream(dos);
 			fis = new FileInputStream(filepath);
+			bis = new BufferedInputStream(fis);
 			writeMode = 1;
 		} catch (IOException e) {
 			e.printStackTrace();
 		} break;
 		case READY_READ_BYTES: try {
 			dis = new DataInputStream(soc.getInputStream());
-			bis = new BufferedInputStream(dis);
+			//bis = new BufferedInputStream(dis);
+			size = dis.readInt();
+			System.out.println("read Int:" + size);
 			readMode = 0;
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -233,6 +241,7 @@ public class SocketMethods extends Device{
 			dis = new DataInputStream(soc.getInputStream());
 			bis = new BufferedInputStream(dis);
 			fos = new FileOutputStream(filepath);
+			bos = new BufferedOutputStream(bos);
 			readMode = 1;
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -264,6 +273,7 @@ public class SocketMethods extends Device{
 		case FILEPATH: return filepath;
 		case BYTEARRAY: return bytearray;
 		case FILEARRAY: return filearray;
+		case SIZE: return size;
 		}
 		return null;
 	}

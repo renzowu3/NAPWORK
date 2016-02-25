@@ -87,15 +87,15 @@ public class Control {
 		
 		//Socket Client test
 		
-		SocketMethods socket = new SocketMethods();
+		/*SocketMethods socket = new SocketMethods();
 		
-		socket.setConfig(SocketMethods.FILEPATH, "/home/renzo/Desktop/bb-8.jpg");
-		socket.setConfig(SocketMethods.TCP_BUFFERSIZE, 2048);
+		socket.setConfig(SocketMethods.FILEPATH, "/home/renzo/Desktop/Maps.mp3");
+		socket.setConfig(SocketMethods.TCP_BUFFERSIZE, 4096);
 		
 		socket.setConfig(SocketMethods.TCP_CLIENTHOSTNAME, "192.168.1.124");
 		socket.setConfig(SocketMethods.TCP_CLIENTPORT, 12345);
 		
-		socket.open(SocketMethods.TCP_CLIENTPORT);
+		socket.open(SocketMethods.OPEN_TCP_CLIENTSOCKET);
 		
 		socket.setConfig(SocketMethods.READY_WRITE_TRANSFERFILE, null);
 		
@@ -103,7 +103,63 @@ public class Control {
 		
 		socket.close(SocketMethods.CLOSE_DATAOUTPUTSTREAM);
 		socket.close(SocketMethods.CLOSE_FILEINPUTSTREAM);
-		socket.close(SocketMethods.CLOSE_CLIENTSOCKET);
+		socket.close(SocketMethods.CLOSE_BUFFEREDINPUTSTREAM);
+		socket.close(SocketMethods.CLOSE_BUFFEREDOUTPUTSTREAM);
+		socket.close(SocketMethods.CLOSE_CLIENTSOCKET);*/
+		
+		//Speaker Socket server
+		
+		final SocketMethods socket = new SocketMethods();
+		final SpeakerMethods speaker = new SpeakerMethods();
+		
+		//socket connection
+		System.out.println("Waiting for connection...");
+		socket.setConfig(SocketMethods.TCP_SERVERPORT, 2222);
+		socket.open(SocketMethods.OPEN_TCP_SERVERSOCKET);
+		System.out.println("Connection established!");
+		
+		socket.setConfig(SocketMethods.READY_READ_BYTES, null);
+		
+		speaker.setConfig(SpeakerMethods.AUDIO_SAMPLERATE, 16000.0F);
+		speaker.setConfig(SpeakerMethods.AUDIO_SAMPLESIZEINBITS, 16);
+		speaker.setConfig(SpeakerMethods.AUDIO_CHANNELS, 2);
+		speaker.setConfig(SpeakerMethods.AUDIO_FRAMESIZE, 4);
+		speaker.setConfig(SpeakerMethods.AUDIO_FRAMERATE, 16000.0F);
+		speaker.setConfig(SpeakerMethods.AUDIO_BIGENDIAN, false);
+		
+		speaker.open(SpeakerMethods.OPEN_SOURCEDATALINE);
+		
+		speaker.setConfig(SpeakerMethods.AUDIO_SOURCEBYTES, 16 * 1024);
+		socket.setConfig(SocketMethods.BYTEARRAY, speaker.getConfig(SpeakerMethods.AUDIO_SOURCEBYTES));
+		speaker.setConfig(SpeakerMethods.AUDIO_WRITEBYTESIZE, socket.getConfig(SocketMethods.SIZE));
+		System.out.println("size:" + socket.getConfig(SocketMethods.SIZE));
+		
+		Thread sourceThread = new Thread(){
+			public void run(){
+				speaker.open(SpeakerMethods.OPEN_PLAYER);
+				System.out.println("Thread");
+				while(true){
+					speaker.write(SpeakerMethods.WRITE_SOURCELINE_BYTES);
+					socket.read(SocketMethods.READ_BYTES);
+					System.out.println("Read bytes");
+				}
+			}	
+		};
+		
+		sourceThread.start();
+		
+		try {
+			Thread.sleep(10000);
+			System.out.println("sleep...");
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
+		
+		speaker.close(SpeakerMethods.CLOSE_SOURCELINE_WRITE);
+		speaker.close(SpeakerMethods.CLOSE_SOURCELINE_AUDIO);
+		socket.close(SocketMethods.CLOSE_DATAINPUTSTREAM);
+		socket.close(SocketMethods.CLOSE_SERVERSOCKET);
+		
 	}
 
 }
