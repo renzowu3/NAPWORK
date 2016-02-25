@@ -96,7 +96,6 @@ public class SocketMethods extends Device{
 		}else if(param == OPEN_TCP_SERVERSOCKET){
 			try {
 				sc = new ServerSocket(serverPortNum);
-				System.out.println("DITO");
 				soc =  sc.accept();
 			} catch (IOException e) {
 				e.printStackTrace();
@@ -188,6 +187,7 @@ public class SocketMethods extends Device{
 				while((read = bis.read(filearray, 0, filearray.length)) != -1){
 					bos.write(filearray, 0, read);
 				}
+				System.out.println("Saved file to:" +filepath);
 				return filepath;
 			} catch (IOException e) {
 				e.printStackTrace();
@@ -217,6 +217,7 @@ public class SocketMethods extends Device{
 			dos = new DataOutputStream(soc.getOutputStream());
 			bos = new BufferedOutputStream(dos);
 			fis = new FileInputStream(filepath);
+			bis = new BufferedInputStream(fis);
 			writeMode = 1;
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -232,6 +233,7 @@ public class SocketMethods extends Device{
 			dis = new DataInputStream(soc.getInputStream());
 			bis = new BufferedInputStream(dis);
 			fos = new FileOutputStream(filepath);
+			bos = new BufferedOutputStream(bos);
 			readMode = 1;
 		} catch (IOException e) {
 			e.printStackTrace();
